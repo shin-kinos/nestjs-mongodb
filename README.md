@@ -1,9 +1,8 @@
 # nestjs-mongodb
 
-
 <html>
   <body>
-    <div style="display: flex; justify-content: center; align-items: center">
+    <div>
       <span>
         <img src="https://thumbs.bfldr.com/at/h5psv9c3jbk88pwc3xn79pp/v/1069931061?expiry=1733224385&fit=bounds&height=162&sig=YzcyY2VlMzgyMWU1YmNhYWMxMTU4NGY3MmU3NTczODhmODc2YTYyOA%3D%3D&width=262">
         </span>
@@ -29,9 +28,11 @@ Apple M1 (macOS 14.3)
 * NestJS (version 10.4.5)
 * MongoDB (db version v7.0.11)
 
-## Set up NestJS
+## Set up NestJS with Mongose
 
-### 1. Install NestJS with `npm`
+### 1. Set up NestJS
+
+#### 1-A. Install NestJS with `npm`
 
 Install `@nestjs/cli`:
 
@@ -51,227 +52,207 @@ Then check if it is installed, e.g.,:
 nest --version
 ```
 
-### 2. Create a new project
+#### 1-B. Create a new project
 
-
-
-```
-% nest g controller backend-animal
-% nest g module     backend-animal
-% nest g service    backend-animal
-```
-
-#### 3. Combine `controller` and `service` into `module`
-
-Open `backend-animal.module.ts`
+Create a new project with a project name - e.g., `nestjs-animal`
 
 ```
-import { Module } from '@nestjs/common';
-import { BackendAnimalController } from './backend-animal.controller';
-import { BackendAnimalService } from './backend-animal.service';
+nest new nestjs-animal
+```
+
+### 1-C. Create a new module
+
+Create a new module with a module name - e.g., `animal` - go to `nestjs-animal/src` and create module `animal`
+
+```
+cd nestjs-animal/src
+```
+
+```
+nest g module animal
+```
+
+And create the controller:
+
+```
+nest g controller animal
+```
+
+And the service;
+
+```
+nest g service animal
+```
+
+Check the following files are generated in `animal` dir:
+
+* `animal.controller.spec.ts`
+* `animal.module.ts`
+* `animal.service.ts`
+* `animal.controller.ts`
+* `animal.service.spec.ts`
+
+### 2. Set up Mongoose in NestJS
+
+#### 2-A. Install Mongoose
+
+To interact NestJS with MongoDB, a npm package `mongoose` is used - go back to `nestjs-animal` dir and install `@nestjs/mongoose` and `mongoose` with `npm`:
+
+```
+npm i @nestjs/mongoose
+```
+
+```
+npm i mongoose
+```
+
+#### 2-B. Create a schema for MongoDB
+
+Create a schema file (e.g., `animal.schema.ts`) in `animal` dir for MongoDB storage:
+
+```
+cd src/animal
+```
+
+```
+touch animal.schema.ts
+```
+
+#### 2-C. Create a MongoDB Schema Factory
+
+The schema factory define a class in `animal.schema.ts` so that they can be interactive with a JSON format data - open `animal.schema.ts` and modify it as follows:
+
+```
+// ✅ This is animal.schema.ts
+
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { HydratedDocument } from 'mongoose';
+
+export type AnimalDocument = HydratedDocument<Animal>;
+
+@Schema()
+  export class Animal {
+    @Prop()
+    name: string;
+
+    @Prop()
+    scientificName: string;
+  }
+
+export const AnimalSchema = SchemaFactory.createForClass( Animal );
+```
+
+A class `Animal` is defined containing 2 properties (`@Props`): `name` and `scientificName`, which is converted to the schema by `SchemaFactory.createForClass`.
+
+#### 2-D. Import the schema to the module
+
+Open `animal.module.ts` and modify it as follows to import `Animal` schema:
+
+```
+// ✅ This is animal.mosule.ts
+
+import { Module               } from '@nestjs/common';
+import { AnimalController     } from './animal.controller';
+import { AnimalService        } from './animal.service';
+import { MongooseModule       } from '@nestjs/mongoose'; // 👈 Add this !
+import { Animal, AnimalSchema } from './animal.schema';  // 👈 Add this !
 
 @Module({
-  controllers : [ BackendAnimalController ], // 👈 Add this!
-  providers   : [ BackendAnimalService ]     // 👈 Add this!
+  imports: [ MongooseModule.forFeature( [ { name: Animal.name, schema: AnimalSchema } ] ) ], // 👈 Add this !
+  controllers: [AnimalController],
+  providers: [AnimalService]
 })
-export class BackendAnimalModule {}
-```
-
-#### 4. Modify `service`
-
-Actual functions can be written in `service`. So opnen `backend-animal.service.ts`.
+export class AnimalModule {}
 
 ```
-import { Injectable } from '@nestjs/common';
 
-export interface Animal {
-  name           : string,
-  scientificName : string
-}
+#### 2-E. Create functions to register/fetch the data from MongoDB
+
+Define 2 functions (`registerAnimal()` and `getAllAnimals()`) in `animal.service.ts` to add and fetch the data from MongoDB as follows:
+
+```
+// ✅ This is animal.service.ts
+
+import { Injectable, Logger } from '@nestjs/common'; // 👈 Add this !
+import { InjectModel } from '@nestjs/mongoose';      // 👈 Add this !
+import { Model } from 'mongoose';                    // 👈 Add this !
+import { Animal } from './animal.schema'             // 👈 Add this !
 
 @Injectable()
-export class BackendAnimalService {
+export class AnimalService {
+  constructor( @InjectModel( Animal.name ) private animalModel: Model<Animal> ) {} // 👈 Add this !
 
-  private animals: Animal[] = [
-    {
-      name           : 'Dog',
-      scientificName : 'Canis lupus familiaris'
-    },
-    {
-      name           : 'Cat',
-      scientificName : 'Felis catus'
-    },
-    {
-      name           : 'Chicken',
-      scientificName : 'Gallus gallus'
-    },
-    {
-      name           : 'Nematode',
-      scientificName : 'C. elegans'
-    },
-    {
-      name           : 'Fruit fly',
-      scientificName : 'Drosophila melanogaster'
-    }
-  ];
-
-  getAnimals() { // 👈 Write function here!
-    console.log( 'The back-end called getAnimals() function!' );
-    return this.animals;
+  // 👇 Add this code block !
+  async registerAnimal( animal: Animal ): Promise<any> {
+    Logger.log( 'NestJS called registerAnimal() function!' );
+    const  result = await this.animalModel.create( animal ); // Register a new Animal data to MongoDB
+    return result;
   }
-}
 
-```
-
-#### 5. Modify `controller`
-
-`Controller` can be a router of the function. Open `backend-animal.controller.ts`
-
-```
-import { Controller, Get              } from '@nestjs/common';
-import { BackendAnimalService, Animal } from './backend-animal.service';
-
-@Controller( 'backend-animal' ) // 👈 'backend-animal' will be the route
-export class BackendAnimalController {
-
-  constructor( private backendAnimalService: BackendAnimalService ) {}
-
-  @Get() // 👈 Set @Get here
-  getAnimals(): Animal[] {
-    return ( this.backendAnimalService ).getAnimals();
+  // 👇 Add this code block !
+  async getAllAnimals(): Promise<Animal[]> {
+    Logger.log( 'NestJS called getAllAnimals() function!' );
+    const  result =  await this.animalModel.find(); // Fetch all the Animal data from MongoDB
+    return result;
   }
 }
 ```
 
-#### 6. <span style="color: red; background-color: yellow; font-weight: bold">IMPORTANT:</span> Enable CORS
+#### 2-F. Modify the controller
 
-Add `add.enableCors()` in `main.ts` or the nasty 'Access-Control-Allow-Origin' error will happen! Open `main.ts` and:
+The controller can be a router of the function - open `animal.controller.ts` and set `@Get` and `@Post` to call those 2 functions in `animal.service.ts`:
 
 ```
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+// ✅ This is animal.controller.ts
+import { Controller, Get, Post, Body } from '@nestjs/common';   // 👈 Modify this !
+import { AnimalService               } from './animal.service'; // 👈 Add this !
+import { Animal                      } from './animal.schema';  // 👈 Add this !
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  // 🔥🔥🔥🔥🔥 IMPORTANT: Add app.enableCors() here or the
-  // nasty 'Access-Control-Allow-Origin' Error happens!
-  app.enableCors(); 
-  await app.listen(process.env.PORT ?? 3000);
+@Controller( 'animal' ) // The path will be `http://localhost:3000/animal`
+export class AnimalController {
+  constructor( private animalService: AnimalService ) {} // 👈 Add this !
+
+  // 👇 Add this code block !
+  @Get( 'get-all' ) // The path will be `http://localhost:3000/animal/get-all`
+  async getAllAnimals(): Promise<Animal[]> {
+    return ( this.animalService ).getAllAnimals();
+  }
+
+  // 👇 Add this code block !
+  @Post( 'register' ) // The path will be `http://localhost:3000/animal/register`
+  async registerAnimal( @Body() animal: Animal ): Promise<any> {
+    return ( this.animalService ).registerAnimal( animal );
+  }
+
 }
-bootstrap();
-```
-
-#### 7. Run NestJS
-
-```
-% npm run start 
-```
-
-## Set up Angular
-
-Basically Front-End side is the same as the general Angular components, but networking with Back-End are done by `serive`:
-
-#### 1. Create example component
-
-Type `ng generate component frontend-animal`. And make `service` file as well.
-
-```
-% ng generate component frontend-animal
-% cd frontend-animal
-% ng generate service frontend-animal # create service file
-```
-
-#### 2. Modify `frontend-animal.service.ts`
-
-HTTP client handling (e.g., `this.httpClient.get( 'localhost://.../' )`) is done in `service`. So open `frontend-animal.service.ts`.
 
 ```
 
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { retry, throwError, catchError } from 'rxjs';
+#### 2-G. Set root path of the module
 
-@Injectable({
-  providedIn: 'root'
+Import `Animal` module and the MongoDB's path (will be mentioned later on) to `app.module.ts` - go back to `src` dir and modify `app.module.ts` as follows:
+
+```
+// ✅ This is app.module.tst
+
+import { Module         } from '@nestjs/common';
+import { AppController  } from './app.controller';
+import { AppService     } from './app.service';
+import { AnimalModule   } from './animal/animal.module'; // 👈 Add this ! (if not imported yet)
+import { MongooseModule } from '@nestjs/mongoose';       // 👈 Add this !
+
+@Module({
+  imports: [
+    AnimalModule, // 👈 Add this ! (if not imported yet)
+    MongooseModule.forRoot( 'mongodb://localhost/animal' ) // 👈 Add this !
+  ],
+  controllers: [AppController],
+  providers: [AppService],
 })
-export class FrontendAnimalService {
-
-  constructor( private httpClient: HttpClient ) {}
-
-  private handleError( error: HttpErrorResponse ) {
-    /*
-     * If the Back-End returns an unsuccessful code;
-     * the response body may contain clues as to what went wrong.
-    */
-    console.error( `Bah! The Back-End returns code ${ error.status }! The body is:`, error.error );
-    // Returns the error message thrown
-    return throwError(
-      () => new Error( 'Bah! Something bad happend! Please try again later on!' )
-    );
-  }
-
-  // Get animals' data from http://localhost:3000/backend-animal/
-  getAnimals(): any {
-    return this.httpClient.get( 'http://localhost:3000/backend-animal/', { responseType: 'json' } )
-      .pipe(
-        retry( 5 ),                    // Try 5 times if unsuccessfull
-        catchError( this.handleError ) // If unsuccessfull after 5 tries; go to errorHandling
-      );
-  }
-
-}
+export class AppModule {}
 
 ```
 
-#### 3. Modify `frontend-animal.component.ts`
+Well done! Now NestJS is ready to interact with MongoDB!🎉
 
-Then you can call the function from `frontend-animal.component.ts`. Open it:
-
-```
-import { Component } from '@angular/core';
-import { FrontendAnimalService } from './frontend-animal.service';
-
-// Import Animals Interface from 'Back-End/src/modules/backend-animal/backend-animal.service.ts'
-import { Animal } from './../../../../../Back-End/src/modules/backend-animal/backend-animal.service';
-
-@Component({
-  selector: 'app-frontend-animal',
-  standalone: true,
-  imports: [],
-  templateUrl: './frontend-animal.component.html',
-  styleUrl: './frontend-animal.component.scss'
-})
-export class FrontendAnimalComponent {
-
-  animals: any;
-
-  constructor( private frontendAnimalService: FrontendAnimalService ) {}
-
-  getAnimals() {
-    this.frontendAnimalService.getAnimals()
-      .subscribe( ( data: Animal ) => {
-        this.animals = data;
-        console.log( 'The Front-End received the data!:', this.animals );
-      } );
-  }
-
-}
-``` 
-
-### 4. <span style="color: red; background-color: yellow; font-weight: bold">IMPORTANT:</span> Set following code block in `app.config.ts`.
-
-Or HTTP Client connection with NestJS will not be successfull!!
-
-```
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
-import { provideRouter } from '@angular/router';
-
-import { routes } from './app.routes';
-import { provideHttpClient } from '@angular/common/http'; // 👈 Add this!
-
-export const appConfig: ApplicationConfig = {
-  providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(routes), provideHttpClient()]
-}; // 👈 Add this!
-
-```
 PAT: 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
