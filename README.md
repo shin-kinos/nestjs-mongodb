@@ -12,7 +12,7 @@
 ## Description
 
 * This is a tutorial explains how to interact NestJS with MongoDB
-* Step-by-step instruction to implement NestJS connectiong with MongoDB on localhost
+* Step-by-step instruction to implement NestJS connecting with MongoDB on localhost
 * Enjoy
 
 ## Test Environment
