@@ -1,17 +1,13 @@
 # nestjs-mongodb
 
-<html>
-  <body>
-    <div>
-      <span>
-        <img src="https://thumbs.bfldr.com/at/h5psv9c3jbk88pwc3xn79pp/v/1069931061?expiry=1733224385&fit=bounds&height=162&sig=YzcyY2VlMzgyMWU1YmNhYWMxMTU4NGY3MmU3NTczODhmODc2YTYyOA%3D%3D&width=262">
-        </span>
-        <span>
-          <img src="https://github.com/nestjs/nestjs.com/blob/b41f0bd9b4d19a604e1a42a85caa3407dd4b8845/img/logo.png?raw=true">
-        </span>
-    </div>
-  </body>
-</html>
+<div align="center">
+  <span>
+    <img src="https://thumbs.bfldr.com/at/h5psv9c3jbk88pwc3xn79pp/v/1069931061?expiry=1733224385&fit=bounds&height=162&sig=YzcyY2VlMzgyMWU1YmNhYWMxMTU4NGY3MmU3NTczODhmODc2YTYyOA%3D%3D&width=262">
+  </span>
+  <span>
+    <img src="https://github.com/nestjs/nestjs.com/blob/b41f0bd9b4d19a604e1a42a85caa3407dd4b8845/img/logo.png?raw=true">
+  </span>
+</div>
 
 ## Description
 
