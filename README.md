@@ -21,14 +21,11 @@
 
 ## Test Environment
 
-Apple M1 (macOS 14.3)
+* Apple M1 (macOS 14.3)
+	* NestJS (version 10.4.5)
+	* MongoDB (db version v7.0.11)
 
-## Dependencies
-
-* NestJS (version 10.4.5)
-* MongoDB (db version v7.0.11)
-
-## Set up NestJS with Mongose
+## Set up NestJS with Mongoose
 
 ### 1. Set up NestJS
 
@@ -60,7 +57,7 @@ Create a new project with a project name - e.g., `nestjs-animal`
 nest new nestjs-animal
 ```
 
-### 1-C. Create a new module
+#### 1-C. Create a new module
 
 Create a new module with a module name - e.g., `animal` - go to `nestjs-animal/src` and create module `animal`
 
@@ -84,7 +81,7 @@ And the service;
 nest g service animal
 ```
 
-Check the following files are generated in `animal` dir:
+Check the following files were generated in `animal` dir:
 
 * `animal.controller.spec.ts`
 * `animal.module.ts`
@@ -253,6 +250,106 @@ export class AppModule {}
 
 ```
 
-Well done! Now NestJS is ready to interact with MongoDB!🎉
+Well done! 🎉 Now NestJS is ready to interact with MongoDB!
 
-PAT: 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
+## Set up MongoDB
+
+### 1. Optional: Install MongoDB
+
+Install MongoDB if it is not done to your enviroment yet - here is an example to do by getting a source and binary from the official WEB site with `wget` commands.
+
+```
+wget https://fastdl.mongodb.org/osx/mongodb-macos-arm64-7.0.11.tgz
+```
+
+**⚠️ Note that the URL above is for <span style="text-decoration:underline;color:red;">macOS ARM 64</span>, please set a proper one for your own environemnt (visit https://www.mongodb.com/try/download/community).**
+
+Then, extract the tarball file:
+
+```
+tar -xvzf mongodb-macos-arm64-7.0.11.tgz
+```
+
+The binary file `mongod` should be in `./mongodb-macos-aarch64-7.0.11/bin` dir - check if it is correctly installed and does work on your environment, if neccessary, e.g.,:
+
+```
+cd mongodb-macos-aarch64-7.0.11/bin
+```
+
+```
+mongod --version
+```
+
+### 2. Run MongoDB
+
+Optional: Make a new dir in any name which will be a data dir of MongoDB, e.g.,:
+
+```
+mkdir database
+```
+
+Then, run the MongoDB with port `27017` - **make sure port `27017` is available in your environment**:
+
+```
+mongod --port 27017 --dbpath database
+```
+
+Now MongoDB should start running!
+
+## Play through NestJS with MongoDB
+
+Finally, let's play through NestJS interacting with MongoDB by using `curl` command.
+
+### 1. Optional: npm install
+
+Install required libraries with `npm`, if it has not been done yet:
+
+```
+cd nestjs-animal
+```
+
+```
+npm install
+```
+
+### 2. Run NestJS
+
+Start `nestjs-animal` - **make sure NestJS is ready to be interactive with MongoDB with the example code above, and MondoDB is running on port `27017`**:
+
+```
+npm run start
+```
+
+If no issues, well done!🎉 Finally the product is deployed!
+
+### 3. Register an animal name
+
+Let's register an animal name as JSON data as `{name:<string>,scientificName:<string>}` with `curl` command - open another terminal and type the following the example command:
+
+```
+ curl -X POST -H 'Content-Type: application/json' -d '{"name":"Human","scientificName":"Homo Sapiens"}' http://localhost:3000/animal/register
+```
+
+that tries to interact NestJS to POST the data of name and scientific name (Human, Homo Sapiens), being registered in MongoDB.
+
+If successful, the a response should look like as follows:
+
+```
+{"name":"Human","scientificName":"Homo Sapiens","_id":"674d80b6bc8eacfc6a336e48","__v":0}%  
+```
+
+### 4. Fetch stored animal names from MongoDB
+
+You can also fetch the data stored in the MongoDB - type the following the example command:
+
+```
+curl -X GET http://localhost:3000/animal/get-all
+```
+
+If successful, the a response should look like as follows:
+
+```
+[{"_id":"674d80b6bc8eacfc6a336e48","name":"Human","scientificName":"Homo Sapiens","__v":0}]
+```
+
+Enjoy😎
