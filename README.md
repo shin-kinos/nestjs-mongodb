@@ -2,7 +2,7 @@
 
 <div align="center">
   <span>
-    <img src="https://thumbs.bfldr.com/at/h5psv9c3jbk88pwc3xn79pp/v/1069931061?expiry=1733224385&fit=bounds&height=162&sig=YzcyY2VlMzgyMWU1YmNhYWMxMTU4NGY3MmU3NTczODhmODc2YTYyOA%3D%3D&width=262">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/MongoDB_Logo.svg/440px-MongoDB_Logo.svg.png">
   </span>
   <span>
     <img src="https://github.com/nestjs/nestjs.com/blob/b41f0bd9b4d19a604e1a42a85caa3407dd4b8845/img/logo.png?raw=true">
@@ -142,7 +142,7 @@ A class `Animal` is defined containing 2 properties (`@Props`): `name` and `scie
 Open `animal.module.ts` and modify it as follows to import `Animal` schema:
 
 ```
-// ✅ This is animal.mosule.ts
+// ✅ This is animal.module.ts
 
 import { Module               } from '@nestjs/common';
 import { AnimalController     } from './animal.controller';
@@ -266,7 +266,7 @@ Then, extract the tarball file:
 tar -xvzf mongodb-macos-arm64-7.0.11.tgz
 ```
 
-The binary file `mongod` should be in `./mongodb-macos-aarch64-7.0.11/bin` dir - check if it is correctly installed and does work on your environment, if neccessary, e.g.,:
+The binary file `mongod` should be in `./mongodb-macos-aarch64-7.0.11/bin` dir - check if it is correctly installed and does work on your environment, if necessary, e.g.,:
 
 ```
 cd mongodb-macos-aarch64-7.0.11/bin
